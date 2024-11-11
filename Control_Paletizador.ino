@@ -193,138 +193,151 @@ void setup() {
 
 
 void loop() {
-  Serial.println(posi_Y);
-  switch (estado) {
-    
-    case ESTADOCERO: {
-        digitalWrite(IN1_Y, LOW);
-        digitalWrite(IN2_Y, LOW);
-        digitalWrite(PWM_Y, LOW);
-        digitalWrite(IN1_X, LOW);
-        digitalWrite(IN2_X, LOW);
-        digitalWrite(PWM_X, LOW);
-        digitalWrite(IN1_Z, LOW);
-        digitalWrite(IN2_Z, LOW);
-        digitalWrite(PWM_Z, LOW);
-        //Serial.println("INICIO");
-        //servo.write(0);
-        if ( digitalRead(INICIO) == true) {
-          estado = INICIAR;
-        }
-        //CerrarGarra();
+
+  switch (state) {  // Switch to determine the current state of the robot
+  
+  case INITIAL_STATE: {  // Initial state: robot is stopped, waiting for user input
+    // Stop all motors by setting relevant pins to LOW
+    digitalWrite(IN1_Y, LOW);
+    digitalWrite(IN2_Y, LOW);
+    digitalWrite(PWM_Y, LOW);
+    digitalWrite(IN1_X, LOW);
+    digitalWrite(IN2_X, LOW);
+    digitalWrite(PWM_X, LOW);
+    digitalWrite(IN1_Z, LOW);
+    digitalWrite(IN2_Z, LOW);
+    digitalWrite(PWM_Z, LOW);
+
+    // If the start button is pressed, move to the "Start" state
+    if ( digitalRead(START) == true) {
+      state = START;
+    }
+    break;
+  }
+
+  case START: {  // Start state: robot is beginning the pick-and-place sequence
+    switch (part) {  // Check which piece we're working with
+
+      case (0): {
+        SetPartPosition(posX, posY, posZ, orientation, 1);  // Set initial position for part 0
+        part = 1;
         break;
       }
 
-    case INICIAR: {
-        //bool avanzarcoordenada = AvanzarCoordenadaXYZ(-250, 220, -20);
-       
-        switch (Pieza) {
-          case (0): {
-            PosicionPieza(posX, posY, posZ, Orientacion, 1);
-            Pieza = 1;
-          }
-
-          
-          case (1): {
-              bool trayectoria = Secuencia(PosicionDeseadaX, PosicionDeseadaY, PosicionDeseadaZ, PosicionDeseadaO, -54);
-              if (trayectoria == true) {
-                Pieza = 2;
-                Etapa = 0;
-                PosicionPieza(posX, posY, posZ, Orientacion, Pieza);
-              } break;
-            }
-          case (2): {
-              bool trayectoria = Secuencia(PosicionDeseadaX, PosicionDeseadaY, PosicionDeseadaZ, PosicionDeseadaO, -54);
-              if (trayectoria == true) {
-                Pieza = 3;
-                Etapa = 0;
-                PosicionPieza(posX, posY, posZ, Orientacion, Pieza);
-              } break;
-            }
-          case (3): {
-              bool trayectoria = Secuencia(PosicionDeseadaX, PosicionDeseadaY, PosicionDeseadaZ, PosicionDeseadaO, -54);
-              if (trayectoria == true) {
-                Pieza = 4;
-                Etapa = 0;
-                PosicionPieza(posX, posY, posZ, Orientacion, Pieza);
-              } break;
-            }
-          case (4): {
-              bool trayectoria = Secuencia(PosicionDeseadaX, PosicionDeseadaY, PosicionDeseadaZ, PosicionDeseadaO, -54);
-              if (trayectoria == true) {
-                Pieza = 5;
-                Etapa = 0;
-                PosicionPieza(posX, posY, posZ, Orientacion, Pieza);
-              }
-            } break;
-
-          case (5): {
-              bool trayectoria = Secuencia(PosicionDeseadaX, PosicionDeseadaY, PosicionDeseadaZ, PosicionDeseadaO, -54);
-              if (trayectoria == true) {
-                Pieza = 6;
-                Etapa = 0;
-                PosicionPieza(posX, posY, posZ, Orientacion, Pieza);
-              }
-              break;
-            }
-          case (6): {
-              bool trayectoria = Secuencia(PosicionDeseadaX, PosicionDeseadaY, PosicionDeseadaZ, PosicionDeseadaO, -54);
-              if (trayectoria == true) {
-                Pieza = 0;
-                Etapa = 0;
-                estado = PARAR;
-                PosicionPieza(posX, posY, posZ, Orientacion, Pieza);
-              }
-              break;
-            }
-        }
-
-        
-        
-        if ( digitalRead(PARO) == true) {
-          estado = PARAR;
+      case (1): {  // Move to the next position for piece 1
+        bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
+        if (trajectory == true) {
+          part = 2;
+          stage = 0;
+          SetPartPosition(posX, posY, posZ, orientation, part);
         }
         break;
       }
-    case PARAR: {
-        digitalWrite(IN1_Y, LOW);
-        digitalWrite(IN2_Y, LOW);
-        digitalWrite(IN1_X, LOW);
-        digitalWrite(IN2_X, LOW);
-        digitalWrite(IN1_Z, LOW);
-        digitalWrite(IN2_Z, LOW);
-        ApagarGarra();
-        if ( digitalRead(INICIO) == true) {
-          estado = INICIAR;
+
+      case (2): {
+        bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
+        if (trajectory == true) {
+          part = 3;
+          stage = 0;
+          SetPartPosition(posX, posY, posZ, orientation, part);
         }
-        if ( digitalRead(REINICIO) == true) {
-          estado = REINICIAR;
-        }
-        servo.write(0);
-
-       
-
-        
-        break;
-      }
-    case REINICIAR:  {
-        Etapa = 0;
-        //CerrarGarra();
-        if ( digitalRead(PARO) == true) {
-          estado = PARAR;
-        }
-
-
-        bool trayectoria = AvanzarCoordenadaXYZ (0, 0, 0);
-        if (trayectoria == true) {
-          estado = PARAR;
-          Etapa = 0;
-              } 
         break;
       }
 
+      case (3): {
+        bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
+        if (trajectory == true) {
+          part = 4;
+          stage = 0;
+          SetPartPosition(posX, posY, posZ, orientation, part);
+        }
+        break;
+      }
+
+      case (4): {
+        bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
+        if (trajectory == true) {
+          part = 5;
+          stage = 0;
+          SetPartPosition(posX, posY, posZ, orientation, part);
+        }
+        break;
+      }
+
+      case (5): {
+        bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
+        if (trajectory == true) {
+          part = 6;
+          stage = 0;
+          SetPartPosition(posX, posY, posZ, orientation, part);
+        }
+        break;
+      }
+
+      case (6): {  // If part 6 is finished, reset the cycle
+        bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
+        if (trajectory == true) {
+          part = 0;
+          stage = 0;
+          state = STOP;  // Stop the robot once all parts are processed
+          SetPartPosition(posX, posY, posZ, orientation, part);
+        }
+        break;
+      }
+    }
+
+    // If the stop button is pressed, switch to the "Stop" state
+    if ( digitalRead(STOP) == true) {
+      state = STOP;
+    }
+    break;
+  }
+
+  case STOP: {  // Stop state: robot halts
+    // Stop all motors and turn off the gripper
+    digitalWrite(IN1_Y, LOW);
+    digitalWrite(IN2_Y, LOW);
+    digitalWrite(IN1_X, LOW);
+    digitalWrite(IN2_X, LOW);
+    digitalWrite(IN1_Z, LOW);
+    digitalWrite(IN2_Z, LOW);
+    StopGripper();
+
+    // If start is pressed, move to the "Start" state
+    if ( digitalRead(START) == true) {
+      state = START;
+    }
+
+    // If reset is pressed, go to the "Reset" state
+    if ( digitalRead(RESET) == true) {
+      state = RESET;
+    }
+
+    servo.write(0);  // Reset the servo to its initial position
+    break;
+  }
+
+  case RESET: {  // Reset state: reset the robot to its initial position
+    stage = 0;
+    // Close the gripper before resetting
+    //CloseGripper();
+
+    // If stop is pressed, switch to the stop state
+    if ( digitalRead(STOP) == true) {
+      state = STOP;
+    }
+
+    // Move to the home position (0, 0, 0)
+    bool trajectory = MoveToCoordinates(0, 0, 0);
+    if (trajectory == true) {
+      state = STOP;
+      stage = 0;
+    }
+    break;
+  }
   }
 }
+
 
 
 
