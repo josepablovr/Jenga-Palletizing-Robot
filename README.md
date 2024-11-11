@@ -7,8 +7,9 @@ Welcome to the **Palletizing Robot** project! This is a **4 DOF robot** that com
 ### The Mechanics
 - **3 Prismatic Actuators**: These are driven by **DC motors with encoders**, each controlled by an optimized **PID controller** in **Arduino**. The standout feature? **Interrupts** handle position updates without delay, ensuring the robot responds immediately.
 - **1 Rotational Joint**: This allows the robot to rotate and pick up items with high precision.
+- **Personalized Gripper**: DC actuated gripper built for picking up Jenga pieces.
 
-**Note**: The actuators and sensors come from an old printer—proof that repurposing can lead to functional and innovative results!
+**Note**: The actuators and sensors came from old printers meant for recycling.
 
 ### Control System
 This robot doesn't rely on a joystick or complex software interface. Instead, it is controlled via a set of **physical buttons**. The core of the control system is a **finite state machine (FSM)** that governs the robot’s operations, so you can easily **Start**, **Pause**, **Stop**, or **Restart** the robot without any delays.
@@ -47,10 +48,12 @@ Enjoy!
 
 
 
-Credits
+Credits:
 
 - José Vásquez: Project Lead, Software Development, Control Systems, and Mechatronics Design
 - Christian Batista: Mechanical and Electrical Assembly
 - Lucía Araya: Mechanical and Electrical Assembly
 - Ian Cambronero: Mechanical Design and Assembly
 - Carlos Cortés: Mechanical Assembly and Software Design
+
+Course: Robotics | Mechatronics Engineering | Costa Rica Institute of Technology  | 2022
