@@ -216,20 +216,20 @@ void loop() {
   }
 
   case START: {  // Start state: robot is beginning the pick-and-place sequence
-    switch (part) {  // Check which piece we're working with
+    switch (piece) {  // Check which piece we're working with
 
       case (0): {
-        SetPartPosition(posX, posY, posZ, orientation, 1);  // Set initial position for part 0
-        part = 1;
+        SetpiecePosition(posX, posY, posZ, orientation, 1);  // Set initial position for piece 0
+        piece = 1;
         break;
       }
 
       case (1): {  // Move to the next position for piece 1
         bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
         if (trajectory == true) {
-          part = 2;
+          piece = 2;
           stage = 0;
-          PositionPiece(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, piece);
         }
         break;
       }
@@ -237,9 +237,9 @@ void loop() {
       case (2): {
         bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
         if (trajectory == true) {
-          part = 3;
+          piece = 3;
           stage = 0;
-          PositionPiece(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, piece);
         }
         break;
       }
@@ -247,9 +247,9 @@ void loop() {
       case (3): {
         bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
         if (trajectory == true) {
-          part = 4;
+          piece = 4;
           stage = 0;
-          PositionPiece(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, piece);
         }
         break;
       }
@@ -257,9 +257,9 @@ void loop() {
       case (4): {
         bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
         if (trajectory == true) {
-          part = 5;
+          piece = 5;
           stage = 0;
-          PositionPiece(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, piece);
         }
         break;
       }
@@ -267,20 +267,20 @@ void loop() {
       case (5): {
         bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
         if (trajectory == true) {
-          part = 6;
+          piece = 6;
           stage = 0;
-          PositionPiece(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, piece);
         }
         break;
       }
 
-      case (6): {  // If part 6 is finished, reset the cycle
+      case (6): {  // If piece 6 is finished, reset the cycle
         bool trajectory = MoveToSequence(targetPositionX, targetPositionY, targetPositionZ, targetOrientation, -54);
         if (trajectory == true) {
-          part = 0;
+          piece = 0;
           stage = 0;
-          state = STOP;  // Stop the robot once all parts are processed
-          PositionPiece(posX, posY, posZ, orientation, part);
+          state = STOP;  // Stop the robot once all pieces are processed
+          PositionPiece(posX, posY, posZ, orientation, piece);
         }
         break;
       }
