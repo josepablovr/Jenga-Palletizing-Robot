@@ -1,3 +1,6 @@
+// Author: Jose Vasquez
+// Email: josepablovasro@gmail.com
+
 #include <util/atomic.h> // For the ATOMIC_BLOCK macro
 
 #include <Servo.h>
