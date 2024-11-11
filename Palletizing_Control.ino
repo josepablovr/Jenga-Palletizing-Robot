@@ -229,7 +229,11 @@ void loop() {
         if (trajectory == true) {
           piece = 2;
           stage = 0;
+<<<<<<< HEAD:Palletizing_Control.ino
           PositionPiece(posX, posY, posZ, orientation, piece);
+=======
+          PositionPiece(posX, posY, posZ, orientation, part);
+>>>>>>> b9c5767 (Translation of Sequence Functions):Control_Paletizador.ino
         }
         break;
       }
@@ -239,7 +243,11 @@ void loop() {
         if (trajectory == true) {
           piece = 3;
           stage = 0;
+<<<<<<< HEAD:Palletizing_Control.ino
           PositionPiece(posX, posY, posZ, orientation, piece);
+=======
+          PositionPiece(posX, posY, posZ, orientation, part);
+>>>>>>> b9c5767 (Translation of Sequence Functions):Control_Paletizador.ino
         }
         break;
       }
@@ -249,7 +257,11 @@ void loop() {
         if (trajectory == true) {
           piece = 4;
           stage = 0;
+<<<<<<< HEAD:Palletizing_Control.ino
           PositionPiece(posX, posY, posZ, orientation, piece);
+=======
+          PositionPiece(posX, posY, posZ, orientation, part);
+>>>>>>> b9c5767 (Translation of Sequence Functions):Control_Paletizador.ino
         }
         break;
       }
@@ -259,7 +271,11 @@ void loop() {
         if (trajectory == true) {
           piece = 5;
           stage = 0;
+<<<<<<< HEAD:Palletizing_Control.ino
           PositionPiece(posX, posY, posZ, orientation, piece);
+=======
+          PositionPiece(posX, posY, posZ, orientation, part);
+>>>>>>> b9c5767 (Translation of Sequence Functions):Control_Paletizador.ino
         }
         break;
       }
@@ -269,7 +285,11 @@ void loop() {
         if (trajectory == true) {
           piece = 6;
           stage = 0;
+<<<<<<< HEAD:Palletizing_Control.ino
           PositionPiece(posX, posY, posZ, orientation, piece);
+=======
+          PositionPiece(posX, posY, posZ, orientation, part);
+>>>>>>> b9c5767 (Translation of Sequence Functions):Control_Paletizador.ino
         }
         break;
       }
@@ -279,8 +299,13 @@ void loop() {
         if (trajectory == true) {
           piece = 0;
           stage = 0;
+<<<<<<< HEAD:Palletizing_Control.ino
           state = STOP;  // Stop the robot once all pieces are processed
           PositionPiece(posX, posY, posZ, orientation, piece);
+=======
+          state = STOP;  // Stop the robot once all parts are processed
+          PositionPiece(posX, posY, posZ, orientation, part);
+>>>>>>> b9c5767 (Translation of Sequence Functions):Control_Paletizador.ino
         }
         break;
       }
