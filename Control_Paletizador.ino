@@ -341,76 +341,83 @@ void loop() {
 
 
 
+// Function to control motor direction and speed
+void setMotor(int direction, int pwmValue, int pwmPin, int in1Pin, int in2Pin) {
+  analogWrite(pwmPin, pwmValue);  // Set the PWM value for speed control
 
-
-
-
-
-
-
-void setMotor(int dir, int pwmVal, int pwm, int in1, int in2) {
-  analogWrite(pwm, pwmVal);
-  if (dir == 1) {
-    digitalWrite(in1, HIGH);
-    digitalWrite(in2, LOW);
+  // Set the motor direction based on the input 'direction'
+  if (direction == 1) {  // Move forward
+    digitalWrite(in1Pin, HIGH);
+    digitalWrite(in2Pin, LOW);
   }
-  else if (dir == -1) {
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, HIGH);
+  else if (direction == -1) {  // Move backward
+    digitalWrite(in1Pin, LOW);
+    digitalWrite(in2Pin, HIGH);
   }
-  else {
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, LOW);
+  else {  // Stop the motor
+    digitalWrite(in1Pin, LOW);
+    digitalWrite(in2Pin, LOW);
   }
 }
 
+
+// Interrupt service routine to read the Y-axis encoder
 void readEncoderY() {
-  int b = digitalRead(ENCB_Y);
-  if (b > 0) {
-    posi_Y++;
+  int stateB = digitalRead(ENCODER_B_Y);  // Read the state of encoder pin B
+  if (stateB > 0) {
+    posi_Y++;  // Increment position if signal is high
   }
   else {
-    posi_Y--;
+    posi_Y--;  // Decrement position if signal is low
   }
 }
 
+
+// Interrupt service routine to read the X-axis encoder
 void readEncoderX() {
-  int b = digitalRead(ENCB_X);
-  if (b > 0) {
-    posi_X++;
+  int stateB = digitalRead(ENCODER_B_X);  // Read the state of encoder pin B
+  if (stateB > 0) {
+    posi_X++;  // Increment position if signal is high
   }
   else {
-    posi_X--;
+    posi_X--;  // Decrement position if signal is low
   }
 }
 
+
+// Interrupt service routine to read the Z-axis encoder
 void readEncoderZ() {
-  int b = digitalRead(ENCB_Z);
-  if (b > 0) {
-    posi_Z++;
+  int stateB = digitalRead(ENCODER_B_Z);  // Read the state of encoder pin B
+  if (stateB > 0) {
+    posi_Z++;  // Increment position if signal is high
   }
   else {
-    posi_Z--;
+    posi_Z--;  // Decrement position if signal is low
   }
 }
 
-bool PIDY (int distanciadeseada) {
-  bool finmovimiento = false;
-  signed long target = 6 * distanciadeseada;
-  long currT = micros();
-  float deltaT = ((float) (currT - prevT)) / ( 1.0e6 );
-  prevT = currT;
+// PID control for the Y-axis
+bool PIDY(int desiredDistance) {
+  bool movementFinished = false;  // Flag to indicate if the movement has finished
+  signed long target = 6 * desiredDistance;  // Target position, scaled by a factor of 6
+  long currentTime = micros();  // Current time in microseconds
+  float deltaTime = ((float)(currentTime - prevT)) / (1.0e6);  // Calculate time difference in seconds
+  prevT = currentTime;  // Update previous time
+
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    pos_Y = posi_Y;
+    pos_Y = posi_Y;  // Read the current position of Y-axis in a safe way
   }
-  // error
+
+  // Calculate error (difference between current position and target)
   e = pos_Y - target;
 
-  // derivative
-  float dedt = (e - eprev) / (deltaT);
+  // Derivative of the error (rate of change)
+  float de_dt = (e - eprev) / (deltaTime);
 
-  // integral
-  eintegral = eintegral + e * deltaT;
+  // Integral of the error (accumulated error over time)
+  eintegral = eintegral + e * deltaTime;
+  
+  // Saturate the integral term to avoid excessive windup
   if (eintegral > velmax_Y - velmin_Y) {
     eintegral = velmax_Y - velmin_Y;
   }
@@ -418,64 +425,72 @@ bool PIDY (int distanciadeseada) {
     eintegral = -velmax_Y + velmin_Y;
   }
 
+  // PID constants for proportional, derivative, and integral control
   float kp = kp_Y;
   float kd = kd_Y;
   float ki = ki_Y;
 
-  // control signal
-  float u = kp * e + kd * dedt + ki * eintegral;
+  // Control signal calculation using the PID formula
+  float u = kp * e + kd * de_dt + ki * eintegral;
 
-  // Acción de control
+  // Calculate power for motor control
   pwr = (int)fabs(u);
-  pwr = velmin_Y + pwr;
+  pwr = velmin_Y + pwr;  // Ensure power is within valid range
 
-  if ( pwr > velmax_Y ) {
+  // Limit the power to the maximum value
+  if (pwr > velmax_Y) {
     pwr = velmax_Y;
-
   }
-  // motor direction
-  int dir = 1;
+
+  // Determine motor direction based on error
+  int direction = 1;  // Default direction is forward
   if (e > 0) {
-    dir = -1;
+    direction = -1;  // Reverse direction if the error is positive
   }
 
+  // If the error is small enough (i.e., movement is finished)
   if (abs(e) < 10) {
-    setMotor(dir, 0, PWM_Y, IN1_Y, IN2_Y);
-    e = 0;
-    eintegral = 0;
-    finmovimiento = true;
-    return finmovimiento;
+    setMotor(direction, 0, PWM_Y, IN1_Y, IN2_Y);  // Stop the motor
+    e = 0;  // Reset error
+    eintegral = 0;  // Reset integral
+    movementFinished = true;  // Indicate movement is finished
+    return movementFinished;  // Return true, movement finished
   }
   else {
-    setMotor(dir, pwr, PWM_Y, IN1_Y, IN2_Y);
+    setMotor(direction, pwr, PWM_Y, IN1_Y, IN2_Y);  // Continue movement
   }
 
-
-
-  // Guarda el error previo
+  // Save the current error for the next iteration
   eprev = e;
-  return finmovimiento;
-
+  return movementFinished;  // Return whether the movement finished
 }
 
-bool PIDX (signed long distanciadeseada_X) {
-  signed long target_X = distanciadeseada_X * 15400 / (PI * 13);
 
-  bool finmovimiento = false;
-  long currT = micros();
-  float deltaT = ((float) (currT - prevT)) / ( 1.0e6 );
-  prevT = currT;
+
+// PID control for the X-axis
+bool PIDX(signed long desiredDistance_X) {
+  // Calculate target position based on desired distance and scaling factor
+  signed long target_X = desiredDistance_X * 15400 / (PI * 13);
+
+  bool movementFinished = false;  // Flag to indicate if the movement has finished
+  long currentTime = micros();  // Current time in microseconds
+  float deltaTime = ((float)(currentTime - prevT)) / (1.0e6);  // Calculate time difference in seconds
+  prevT = currentTime;  // Update previous time
+
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    pos_X = posi_X;
+    pos_X = posi_X;  // Read the current position of X-axis in a safe way
   }
-  // error
-  e = pos_X - target_X;
-  //Serial.println(target_X);
-  // derivative
-  float dedt = (e - eprev) / (deltaT);
 
-  // integral
-  eintegral = eintegral + e * deltaT;
+  // Calculate error (difference between current position and target)
+  e = pos_X - target_X;
+
+  // Derivative of the error (rate of change)
+  float de_dt = (e - eprev) / (deltaTime);
+
+  // Integral of the error (accumulated error over time)
+  eintegral = eintegral + e * deltaTime;
+
+  // Saturate the integral term to avoid excessive windup
   if (eintegral > velmax_X - velmin_X) {
     eintegral = velmax_X - velmin_X;
   }
@@ -483,103 +498,113 @@ bool PIDX (signed long distanciadeseada_X) {
     eintegral = -velmax_X + velmin_X;
   }
 
+  // PID constants for proportional, derivative, and integral control
   float kp = kp_X;
   float kd = kd_X;
   float ki = ki_X;
-  int dir = -1;
+
+  int direction = -1;  // Default direction is reverse
   float Velmin = velmin_X;
+
   if (e < 0) {
-    dir = 1;
+    direction = 1;  // Forward direction if error is negative
   }
-
-  
-  
   else if (e > 0) {
-    kp = kp*0.15;
-    ki = ki*0.05;
-    float Velmin = Velmin*0.15;
+    // Adjust PID constants and minimum speed for large errors
+    kp = kp * 0.15;
+    ki = ki * 0.05;
+    Velmin = Velmin * 0.15;
   }
-  
-  // control signal
-  float u = kp * e + kd * dedt + ki * eintegral;
 
-  // Acción de control
+  // Control signal calculation using the PID formula
+  float u = kp * e + kd * de_dt + ki * eintegral;
+
+  // Calculate power for motor control
   pwr = (int)fabs(u);
-  pwr = Velmin + pwr;
+  pwr = Velmin + pwr;  // Ensure power is within valid range
 
-  if ( pwr > velmax_X ) {
+  // Limit the power to the maximum value
+  if (pwr > velmax_X) {
     pwr = velmax_X;
-
   }
-  // motor direction
-  
 
+  // If the error is small enough (i.e., movement is finished)
   if (abs(e) < 100) {
-    setMotor(dir, 0, PWM_X, IN1_X, IN2_X);
-    e = 0;
-    eintegral = 0;
-    finmovimiento = true;
-    return finmovimiento;
+    setMotor(direction, 0, PWM_X, IN1_X, IN2_X);  // Stop the motor
+    e = 0;  // Reset error
+    eintegral = 0;  // Reset integral
+    movementFinished = true;  // Indicate movement is finished
+    return movementFinished;  // Return true, movement finished
   }
   else {
-    setMotor(dir, pwr, PWM_X, IN1_X, IN2_X);
+    setMotor(direction, pwr, PWM_X, IN1_X, IN2_X);  // Continue movement
   }
 
-
-
-  // Guarda el error previo
+  // Save the current error for the next iteration
   eprev = e;
-  return finmovimiento;
-
+  return movementFinished;  // Return whether the movement finished
 }
 
-bool PIDZ (signed long distanciadeseada) {
 
-  signed long target_Z = -1 * distanciadeseada * 15400 / (PI * 13);
 
-  bool finmovimiento = false;
-  long currT = micros();
-  float deltaT = ((float) (currT - prevT)) / ( 1.0e6 );
-  prevT = currT;
+
+// PID control for the Z-axis
+bool PIDZ(signed long desiredDistance) {
+
+  // Calculate target position based on desired distance and scaling factor
+  signed long target_Z = -1 * desiredDistance * 15400 / (PI * 13);
+
+  bool movementFinished = false;  // Flag to indicate if the movement has finished
+  long currentTime = micros();  // Current time in microseconds
+  float deltaTime = ((float)(currentTime - prevT)) / (1.0e6);  // Calculate time difference in seconds
+  prevT = currentTime;  // Update previous time
+
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    pos_Z = posi_Z;
+    pos_Z = posi_Z;  // Read the current position of Z-axis in a safe way
   }
-  // error
-  e = pos_Z - target_Z;
-  //Serial.println(target_Z);
-  // derivative
-  float dedt = (e - eprev) / (deltaT);
 
-  // integral
-  eintegral = eintegral + e * deltaT;
+  // Calculate error (difference between current position and target)
+  e = pos_Z - target_Z;
+
+  // Derivative of the error (rate of change)
+  float de_dt = (e - eprev) / (deltaTime);
+
+  // Integral of the error (accumulated error over time)
+  eintegral = eintegral + e * deltaTime;
+
+  // Saturate the integral term to avoid excessive windup
   if (eintegral > velmax_Z - velmin_Z) {
     eintegral = velmax_Z - velmin_Z;
   }
   else if (eintegral < -velmax_Z + velmin_Z) {
     eintegral = -velmax_Z + velmin_Z;
   }
+
+  // PID constants for proportional, derivative, and integral control
   float kp = kp_Z;
   float kd = kd_Z;
   float ki = ki_Z;
 
+  // Control signal calculation using the PID formula
+  float u = kp * e + kd * de_dt + ki * eintegral;
 
-  // control signal
-  float u = kp * e + kd * dedt + ki * eintegral;
-
-  // Acción de control
+  // Calculate power for motor control
   pwr = (int)fabs(u);
-  pwr = velmin_Z + pwr;
+  pwr = velmin_Z + pwr;  // Ensure power is within valid range
 
-  if ( pwr > velmin_Z ) {
+  // Limit the power to the maximum value
+  if (pwr > velmax_Z) {
     pwr = velmax_Z;
+  }
 
-  }
-  // motor direction
-  int dir = -1;
+  // Set motor direction based on the error
+  int direction = -1;
   if (e < 0) {
-    dir = 1;
+    direction = 1;  // Forward direction if error is negative
   }
-  if (dir == -1) {
+
+  // Adjust PID constants and speed for different directions
+  if (direction == -1) {
     kp_Z = kp_ZR;
     kd_Z = kd_ZR;
     ki_Z = ki_ZR;
@@ -592,26 +617,25 @@ bool PIDZ (signed long distanciadeseada) {
     ki_Z = ki_ZD;
     velmin_Z = velmin_ZD;
     velmax_Z = velmax_ZD;
-
   }
+
+  // If the error is small enough (i.e., movement is finished)
   if (abs(e) < 100) {
-    setMotor(dir, 0, PWM_Z, IN1_Z, IN2_Z);
-    e = 0;
-    eintegral = 0;
-    finmovimiento = true;
-    return finmovimiento;
+    setMotor(direction, 0, PWM_Z, IN1_Z, IN2_Z);  // Stop the motor
+    e = 0;  // Reset error
+    eintegral = 0;  // Reset integral
+    movementFinished = true;  // Indicate movement is finished
+    return movementFinished;  // Return true, movement finished
   }
   else {
-    setMotor(dir, pwr, PWM_Z, IN1_Z, IN2_Z);
+    setMotor(direction, pwr, PWM_Z, IN1_Z, IN2_Z);  // Continue movement
   }
 
-
-
-  // Guarda el error previo
+  // Save the current error for the next iteration
   eprev = e;
-  return finmovimiento;
-
+  return movementFinished;  // Return whether the movement finished
 }
+
 
 
 void AbrirGarra() {
