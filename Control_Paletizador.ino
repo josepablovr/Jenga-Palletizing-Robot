@@ -5,20 +5,20 @@
 Servo servo; // Declare a Servo object to control the servo motor
 
 // Constants for piece dimensions
-const int DistanciaEntrePiezas = 28; // Distance between pieces (in mm)
-const int AlturadePieza = 17;        // Height of each piece (in mm)
+const int DistanceBetweenPieces = 28; // Distance between pieces (in mm)
+const int PieceHeight = 17;           // Height of each piece (in mm)
 
 // Coordinates for the robot's end effector position
 int posX = 230; // X position of the end effector
 int posY = 210; // Y position of the end effector
 int posZ = -38; // Z position of the end effector (negative for downward)
-int Orientacion = 0; // Orientation angle of the end effector
+int Orientation = 0; // Orientation angle of the end effector
 
 // Button definitions for controlling the robot
-#define PARO 44          // Stop button
-#define INICIO 45        // Start button
-#define CALIBRACION 47   // Calibration button
-#define REINICIO 46      // Restart button
+#define STOP 44          // Stop button
+#define START 45         // Start button
+#define CALIBRATION 47   // Calibration button
+#define RESET 46         // Restart button
 
 // Motor and encoder pins for the Y-axis
 #define ENCA_Y 21        // Encoder A for Y-axis
@@ -45,135 +45,137 @@ int Orientacion = 0; // Orientation angle of the end effector
 #define PWM_G 3          // PWM pin for gripper motor control
 #define IN2_G 36         // Gripper direction control pin 2
 #define IN1_G 37         // Gripper direction control pin 1
-int pwm_abrir = 90;    // PWM value to open the gripper
-int pwm_cerrar = 100;  // PWM value to close the gripper
+int pwm_open = 90;     // PWM value to open the gripper
+int pwm_close = 100;   // PWM value to close the gripper
 
 // Control parameters for Y-axis
-int pormin_Y = 46;     // Minimum percentage for Y-axis speed
-int pormax_Y = 52;     // Maximum percentage for Y-axis speed
-int velmin_Y = 255 * pormin_Y / 100; // Min speed for Y-axis based on percentage
-int velmax_Y = 255 * pormax_Y / 100; // Max speed for Y-axis based on percentage
-float kp_Y = 0.09;     // Proportional gain for Y-axis PID control
-float kd_Y = 0.0;      // Derivative gain for Y-axis PID control
-float ki_Y = 0.05;     // Integral gain for Y-axis PID control
+int minPercent_Y = 46;   // Minimum percentage for Y-axis speed
+int maxPercent_Y = 52;   // Maximum percentage for Y-axis speed
+int minSpeed_Y = 255 * minPercent_Y / 100; // Min speed for Y-axis based on percentage
+int maxSpeed_Y = 255 * maxPercent_Y / 100; // Max speed for Y-axis based on percentage
+float kp_Y = 0.09;       // Proportional gain for Y-axis PID control
+float kd_Y = 0.0;        // Derivative gain for Y-axis PID control
+float ki_Y = 0.05;       // Integral gain for Y-axis PID control
 
 // Control parameters for X-axis
-int pormin_X = 32;     // Minimum percentage for X-axis speed
-int pormax_X = 40;     // Maximum percentage for X-axis speed
-int velmin_X = 255 * pormin_X / 100; // Min speed for X-axis based on percentage
-int velmax_X = 255 * pormax_X / 100; // Max speed for X-axis based on percentage
-float kp_X = 0.1;      // Proportional gain for X-axis PID control
-float kd_X = 0.0;      // Derivative gain for X-axis PID control
-float ki_X = 0.004;    // Integral gain for X-axis PID control
+int minPercent_X = 32;   // Minimum percentage for X-axis speed
+int maxPercent_X = 40;   // Maximum percentage for X-axis speed
+int minSpeed_X = 255 * minPercent_X / 100; // Min speed for X-axis based on percentage
+int maxSpeed_X = 255 * maxPercent_X / 100; // Max speed for X-axis based on percentage
+float kp_X = 0.1;        // Proportional gain for X-axis PID control
+float kd_X = 0.0;        // Derivative gain for X-axis PID control
+float ki_X = 0.004;      // Integral gain for X-axis PID control
 
 // Control parameters for Z-axis
-int pormin_Z = 55;     // Minimum percentage for Z-axis speed
-int pormax_Z = 65;     // Maximum percentage for Z-axis speed
-int velmin_Z = 255 * pormin_Z / 100; // Min speed for Z-axis based on percentage
-int velmax_Z = 255 * pormax_Z / 100; // Max speed for Z-axis based on percentage
-float kp_Z = 0.005;    // Proportional gain for Z-axis PID control
-float kd_Z = 0.0;      // Derivative gain for Z-axis PID control
-float ki_Z = 0.0001;   // Integral gain for Z-axis PID control
+int minPercent_Z = 55;   // Minimum percentage for Z-axis speed
+int maxPercent_Z = 65;   // Maximum percentage for Z-axis speed
+int minSpeed_Z = 255 * minPercent_Z / 100; // Min speed for Z-axis based on percentage
+int maxSpeed_Z = 255 * maxPercent_Z / 100; // Max speed for Z-axis based on percentage
+float kp_Z = 0.005;      // Proportional gain for Z-axis PID control
+float kd_Z = 0.0;        // Derivative gain for Z-axis PID control
+float ki_Z = 0.0001;     // Integral gain for Z-axis PID control
 
 // Control parameters for Z-axis during descent
-float kp_ZD = 0.012;   // Proportional gain for Z-axis descent PID control
-float kd_ZD = 0.0;     // Derivative gain for Z-axis descent PID control
-float ki_ZD = 0.01;    // Integral gain for Z-axis descent PID control
-int pormin_ZD = 23;    // Minimum percentage for Z-axis descent speed
-int pormax_ZD = 27;    // Maximum percentage for Z-axis descent speed
-int velmin_ZD = 255 * pormin_ZD / 100; // Min speed for Z-axis descent based on percentage
-int velmax_ZD = 255 * pormax_ZD / 100; // Max speed for Z-axis descent based on percentage
+float kp_ZD = 0.012;     // Proportional gain for Z-axis descent PID control
+float kd_ZD = 0.0;       // Derivative gain for Z-axis descent PID control
+float ki_ZD = 0.01;      // Integral gain for Z-axis descent PID control
+int minPercent_ZD = 23;  // Minimum percentage for Z-axis descent speed
+int maxPercent_ZD = 27;  // Maximum percentage for Z-axis descent speed
+int minSpeed_ZD = 255 * minPercent_ZD / 100; // Min speed for Z-axis descent based on percentage
+int maxSpeed_ZD = 255 * maxPercent_ZD / 100; // Max speed for Z-axis descent based on percentage
 
 // Control parameters for Z-axis rotation (ZR)
-int velminZR = velmin_Z;  // Min speed for Z-axis rotation (same as Z-axis)
-int velmaxZR = velmax_Z;  // Max speed for Z-axis rotation (same as Z-axis)
-float kp_ZR = kp_Z;       // Proportional gain for Z-axis rotation PID control
-float kd_ZR = kd_Z;       // Derivative gain for Z-axis rotation PID control
-float ki_ZR = ki_Z;       // Integral gain for Z-axis rotation PID control
+int minSpeedZR = minSpeed_Z;  // Min speed for Z-axis rotation (same as Z-axis)
+int maxSpeedZR = maxSpeed_Z;  // Max speed for Z-axis rotation (same as Z-axis)
+float kp_ZR = kp_Z;           // Proportional gain for Z-axis rotation PID control
+float kd_ZR = kd_Z;           // Derivative gain for Z-axis rotation PID control
+float ki_ZR = ki_Z;           // Integral gain for Z-axis rotation PID control
 
 // Movement status flags for each axis
-bool avanceY = false; // Flag indicating movement status for Y-axis
-bool avanceX = false; // Flag indicating movement status for X-axis
-bool avanceZ = false; // Flag indicating movement status for Z-axis
-int paso = 0;         // Step counter for controlling the movement sequence
+bool moveY = false;  // Flag indicating movement status for Y-axis
+bool moveX = false;  // Flag indicating movement status for X-axis
+bool moveZ = false;  // Flag indicating movement status for Z-axis
+int step = 0;        // Step counter for controlling the movement sequence
 
 // Volatile variables for position tracking with interrupts
-volatile signed long posi_Y = 0; // Position variable for Y-axis, modified by interrupts
-volatile signed long posi_X = 0; // Position variable for X-axis, modified by interrupts
-volatile signed long posi_Z = 0; // Position variable for Z-axis, modified by interrupts
+volatile signed long posY_interrupt = 0; // Position variable for Y-axis, modified by interrupts
+volatile signed long posX_interrupt = 0; // Position variable for X-axis, modified by interrupts
+volatile signed long posZ_interrupt = 0; // Position variable for Z-axis, modified by interrupts
 
 // Non-volatile position variables
-signed long pos_Y = 0; // Current Y-axis position
-signed long pos_X = 0; // Current X-axis position
-signed long pos_Z = 0; // Current Z-axis position
+signed long posY = 0; // Current Y-axis position
+signed long posX = 0; // Current X-axis position
+signed long posZ = 0; // Current Z-axis position
 
-const int Tiempo = 10; // Time delay for loop or control actions (in milliseconds)
+const int Time = 10; // Time delay for loop or control actions (in milliseconds)
 
 // PID control variables
-long prevT = 0;       // Previous time for calculating time difference in PID
-float eprev = 0;      // Previous error for calculating PID derivative
-float eintegral = 0;  // Integral of the error for PID control
-unsigned long Timer = 0; // Timer for control actions
-signed long e = 0;    // Error term for PID control
-int pwr = 0;          // Power output for the motors
+long prevTime = 0;       // Previous time for calculating time difference in PID
+float prevError = 0;     // Previous error for calculating PID derivative
+float errorIntegral = 0; // Integral of the error for PID control
+unsigned long timer = 0; // Timer for control actions
+signed long error = 0;   // Error term for PID control
+int power = 0;           // Power output for the motors
 
 // Desired positions for each axis
-float PosicionDeseadaX = 0.0; // Desired X position
-float PosicionDeseadaY = 0.0; // Desired Y position
-float PosicionDeseadaZ = 0.0; // Desired Z position
-float PosicionDeseadaO = 0.0; // Desired orientation (rotation angle)
+float DesiredPositionX = 0.0; // Desired X position
+float DesiredPositionY = 0.0; // Desired Y position
+float DesiredPositionZ = 0.0; // Desired Z position
+float DesiredOrientation = 0.0; // Desired orientation (rotation angle)
 
 // Enumeration for robot states
-enum PosiblesEstados {ESTADOCERO, PARAR, REINICIAR, CALIBRAR, INICIAR};
-PosiblesEstados estado = ESTADOCERO; // Initial robot state
+enum PossibleStates {STATE_ZERO, STOP, RESET, CALIBRATE, START};
+PossibleStates state = STATE_ZERO; // Initial robot state
 
-int Etapa = 0; // Current step in the sequence
-int Pieza = 0; // Current piece number in the process
+int Stage = 0; // Current step in the sequence
+int Piece = 0; // Current piece number in the process
 
 void setup() {
-
+  // Start serial communication for debugging and status updates
   Serial.begin(9600);
-  //EJE Y
+
+  // Setup pins for Y-axis motor, encoder, and PWM
   pinMode(ENCA_Y, INPUT);
   pinMode(ENCB_Y, INPUT);
   pinMode(IN1_Y, OUTPUT);
   pinMode(IN2_Y, OUTPUT);
   pinMode(PWM_Y, OUTPUT);
+  TCCR3B = TCCR3B & B11111000 | B00000011;  // Set PWM frequency to 490.20 Hz for Y-axis
 
-  TCCR3B = TCCR3B & B11111000 | B00000011;  // for PWM frequency of 490.20 Hz
-
-  //EJE X
+  // Setup pins for X-axis motor, encoder, and PWM
   pinMode(ENCA_X, INPUT);
   pinMode(ENCB_X, INPUT);
   pinMode(IN1_X, OUTPUT);
   pinMode(IN2_X, OUTPUT);
   pinMode(PWM_X, OUTPUT);
 
-  //EJE Z
+  // Setup pins for Z-axis motor, encoder, and PWM
   pinMode(ENCA_Z, INPUT);
   pinMode(ENCB_Z, INPUT);
   pinMode(IN1_Z, OUTPUT);
   pinMode(IN2_Z, OUTPUT);
   pinMode(PWM_Z, OUTPUT);
 
+  // Setup buttons for control
+  pinMode(STOP, INPUT);
+  pinMode(START, INPUT);
+  pinMode(CALIBRATION, INPUT);
+  pinMode(RESET, INPUT);
 
-  //BOTONES
-  pinMode(PARO, INPUT);
-  pinMode(INICIO, INPUT);
-  pinMode(CALIBRACION, INPUT);
-  pinMode(REINICIO, INPUT);
-
-  //GARRA
+  // Setup pins for gripper motor
   pinMode(IN1_G, OUTPUT);
   pinMode(IN2_G, OUTPUT);
   pinMode(PWM_G, OUTPUT);
 
-  //INTERRUPCIONES
+  // Attach interrupts for encoders on all axes
   attachInterrupt(digitalPinToInterrupt(ENCA_Y), readEncoderY, RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_X), readEncoderX, RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_Z), readEncoderZ, RISING);
 
-  Serial.println("INICIO");
+  // Print startup message to the serial monitor
+  Serial.println("START");
+
+  // Initialize motors to stop position
   digitalWrite(IN1_Y, LOW);
   digitalWrite(IN2_Y, LOW);
   digitalWrite(PWM_Y, LOW);
@@ -183,10 +185,11 @@ void setup() {
   digitalWrite(IN1_Z, LOW);
   digitalWrite(IN2_Z, LOW);
   digitalWrite(PWM_Z, LOW);
-  servo.attach(2);
 
-  
+  // Attach the servo motor to pin 2
+  servo.attach(2);
 }
+
 
 
 void loop() {
@@ -212,66 +215,6 @@ void loop() {
         break;
       }
 
-//    case INICIAR: {
-//        //bool avanzarcoordenada = AvanzarCoordenadaXYZ(-250, 220, -20);
-//        Pieza = 0;
-
-//        switch (Pieza) {
-//          case (1): {
-//              bool trayectoria = Secuencia(-250, 245, -50, 10, -50);
-//              if (trayectoria == true) {
-//                Pieza = 2;
-//                Etapa = 0;
-//              } break;
-//            }
-//          case (2): {
-//              bool trayectoria = Secuencia(-220, 245, -50, 10, -50);
-//              if (trayectoria == true) {
-//                Pieza = 3;
-//                Etapa = 0;
-//              } break;
-//            }
-//          case (3): {
-//              bool trayectoria = Secuencia(-200, 245, -50, 10, -50);
-//              if (trayectoria == true) {
-//                Pieza = 4;
-//                Etapa = 0;
-//              } break;
-//            }
-//          case (4): {
-//              bool trayectoria = Secuencia(-210, 270, -35, 100, -50);
-//              if (trayectoria == true) {
-//                Pieza = 5;
-//                Etapa = 0;
-//              }
-//            } break;
-//
-//          case (5): {
-//              bool trayectoria = Secuencia(-210, 245, -35, 100, -50);
-//              if (trayectoria == true) {
-//                Pieza = 6;
-//                Etapa = 0;
-//              }
-//              break;
-//            }
-//          case (6): {
-//              bool trayectoria = Secuencia(-210, 220, -35, 100, -50);
-//              if (trayectoria == true) {
-//                Pieza = 0;
-//                Etapa = 0;
-//                estado = PARAR;
-//              }
-//              break;
-//            }
-//        }
-//
-//        CerrarGarra();
-//        
-//        if ( digitalRead(PARO) == true) {
-//          estado = PARAR;
-//        }
-//        break;
-//      }
     case INICIAR: {
         //bool avanzarcoordenada = AvanzarCoordenadaXYZ(-250, 220, -20);
        
