@@ -2,126 +2,134 @@
 
 #include <Servo.h>
 
-Servo servo;
+Servo servo; // Declare a Servo object to control the servo motor
 
-const int DistanciaEntrePiezas = 28;
-const int AlturadePieza = 17;
+// Constants for piece dimensions
+const int DistanciaEntrePiezas = 28; // Distance between pieces (in mm)
+const int AlturadePieza = 17;        // Height of each piece (in mm)
 
-//Coordenadas
-int posX = 230;
-int posY = 210;
-int posZ = -38;
-int Orientacion = 0;
+// Coordinates for the robot's end effector position
+int posX = 230; // X position of the end effector
+int posY = 210; // Y position of the end effector
+int posZ = -38; // Z position of the end effector (negative for downward)
+int Orientacion = 0; // Orientation angle of the end effector
 
-//BOTONES
-#define PARO 44
-#define INICIO 45
-#define CALIBRACION 47
-#define REINICIO 46
+// Button definitions for controlling the robot
+#define PARO 44          // Stop button
+#define INICIO 45        // Start button
+#define CALIBRACION 47   // Calibration button
+#define REINICIO 46      // Restart button
 
-//EJE Y
-#define ENCA_Y 21
-#define ENCB_Y 22
-#define PWM_Y 5
-#define IN2_Y 26
-#define IN1_Y 24
+// Motor and encoder pins for the Y-axis
+#define ENCA_Y 21        // Encoder A for Y-axis
+#define ENCB_Y 22        // Encoder B for Y-axis
+#define PWM_Y 5          // PWM pin for Y-axis motor control
+#define IN2_Y 26         // Motor direction control pin 2 for Y-axis
+#define IN1_Y 24         // Motor direction control pin 1 for Y-axis
 
+// Motor and encoder pins for the X-axis
+#define ENCA_X 20        // Encoder A for X-axis
+#define ENCB_X 23        // Encoder B for X-axis
+#define PWM_X 6          // PWM pin for X-axis motor control
+#define IN2_X 30         // Motor direction control pin 2 for X-axis
+#define IN1_X 28         // Motor direction control pin 1 for X-axis
 
-//EJE X
-#define ENCA_X 20
-#define ENCB_X 23
-#define PWM_X 6
-#define IN2_X 30
-#define IN1_X 28
+// Motor and encoder pins for the Z-axis
+#define ENCA_Z 19        // Encoder A for Z-axis
+#define ENCB_Z 32        // Encoder B for Z-axis
+#define PWM_Z 4          // PWM pin for Z-axis motor control
+#define IN2_Z 25         // Motor direction control pin 2 for Z-axis
+#define IN1_Z 27         // Motor direction control pin 1 for Z-axis
 
-//EJE Z
-#define ENCA_Z 19
-#define ENCB_Z 32
-#define PWM_Z 4
-#define IN2_Z 25
-#define IN1_Z 27
+// Gripper motor control pins
+#define PWM_G 3          // PWM pin for gripper motor control
+#define IN2_G 36         // Gripper direction control pin 2
+#define IN1_G 37         // Gripper direction control pin 1
+int pwm_abrir = 90;    // PWM value to open the gripper
+int pwm_cerrar = 100;  // PWM value to close the gripper
 
-//GARRA
-#define PWM_G 3
-#define IN2_G 36
-#define IN1_G 37
-int pwm_abrir = 90;
-int pwm_cerrar = 100;
+// Control parameters for Y-axis
+int pormin_Y = 46;     // Minimum percentage for Y-axis speed
+int pormax_Y = 52;     // Maximum percentage for Y-axis speed
+int velmin_Y = 255 * pormin_Y / 100; // Min speed for Y-axis based on percentage
+int velmax_Y = 255 * pormax_Y / 100; // Max speed for Y-axis based on percentage
+float kp_Y = 0.09;     // Proportional gain for Y-axis PID control
+float kd_Y = 0.0;      // Derivative gain for Y-axis PID control
+float ki_Y = 0.05;     // Integral gain for Y-axis PID control
 
-//Eje Y
-int pormin_Y = 46;
-int pormax_Y = 52;
-int velmin_Y = 255 * pormin_Y / 100;
-int velmax_Y = 255 * pormax_Y / 100;
-float kp_Y = 0.09;
-float kd_Y = 0.0;
-float ki_Y = 0.05;
+// Control parameters for X-axis
+int pormin_X = 32;     // Minimum percentage for X-axis speed
+int pormax_X = 40;     // Maximum percentage for X-axis speed
+int velmin_X = 255 * pormin_X / 100; // Min speed for X-axis based on percentage
+int velmax_X = 255 * pormax_X / 100; // Max speed for X-axis based on percentage
+float kp_X = 0.1;      // Proportional gain for X-axis PID control
+float kd_X = 0.0;      // Derivative gain for X-axis PID control
+float ki_X = 0.004;    // Integral gain for X-axis PID control
 
-//Eje X
-int pormin_X = 32;
-int pormax_X = 40;
-int velmin_X = 255 * pormin_X / 100;
-int velmax_X = 255 * pormax_X / 100;
-float kp_X = 0.1;
-float kd_X = 0.0;
-float ki_X = 0.004;
+// Control parameters for Z-axis
+int pormin_Z = 55;     // Minimum percentage for Z-axis speed
+int pormax_Z = 65;     // Maximum percentage for Z-axis speed
+int velmin_Z = 255 * pormin_Z / 100; // Min speed for Z-axis based on percentage
+int velmax_Z = 255 * pormax_Z / 100; // Max speed for Z-axis based on percentage
+float kp_Z = 0.005;    // Proportional gain for Z-axis PID control
+float kd_Z = 0.0;      // Derivative gain for Z-axis PID control
+float ki_Z = 0.0001;   // Integral gain for Z-axis PID control
 
-//Eje Z
-int pormin_Z = 55;
-int pormax_Z = 65;
-int velmin_Z = 255 * pormin_Z / 100;
-int velmax_Z = 255 * pormax_Z / 100;
-float kp_Z = 0.005;
-float kd_Z = 0.0;
-float ki_Z = 0.0001;
-float kp_ZD = 0.012;
-float kd_ZD = 0.0;
-float ki_ZD = 0.01;
-int pormin_ZD = 23;
-int pormax_ZD = 27;
-int velmin_ZD = 255 * pormin_ZD / 100;
-int velmax_ZD = 255 * pormax_ZD / 100;
-int velminZR = velmin_Z;
-int velmaxZR = velmax_Z;
-float kp_ZR = kp_Z;
-float kd_ZR = kd_Z;
-float ki_ZR = ki_Z;
+// Control parameters for Z-axis during descent
+float kp_ZD = 0.012;   // Proportional gain for Z-axis descent PID control
+float kd_ZD = 0.0;     // Derivative gain for Z-axis descent PID control
+float ki_ZD = 0.01;    // Integral gain for Z-axis descent PID control
+int pormin_ZD = 23;    // Minimum percentage for Z-axis descent speed
+int pormax_ZD = 27;    // Maximum percentage for Z-axis descent speed
+int velmin_ZD = 255 * pormin_ZD / 100; // Min speed for Z-axis descent based on percentage
+int velmax_ZD = 255 * pormax_ZD / 100; // Max speed for Z-axis descent based on percentage
 
-bool avanceY = false;
-bool avanceX = false;
-bool avanceZ = false;
-int paso = 0;
+// Control parameters for Z-axis rotation (ZR)
+int velminZR = velmin_Z;  // Min speed for Z-axis rotation (same as Z-axis)
+int velmaxZR = velmax_Z;  // Max speed for Z-axis rotation (same as Z-axis)
+float kp_ZR = kp_Z;       // Proportional gain for Z-axis rotation PID control
+float kd_ZR = kd_Z;       // Derivative gain for Z-axis rotation PID control
+float ki_ZR = ki_Z;       // Integral gain for Z-axis rotation PID control
 
-//Volatiles
-volatile signed long posi_Y = 0; // specify posi_Y as volatile: https://www.arduino.cc/reference/en/language/variables/variable-scope-qualifiers/volatile/
-volatile signed long posi_X = 0;
-volatile signed long posi_Z = 0;
+// Movement status flags for each axis
+bool avanceY = false; // Flag indicating movement status for Y-axis
+bool avanceX = false; // Flag indicating movement status for X-axis
+bool avanceZ = false; // Flag indicating movement status for Z-axis
+int paso = 0;         // Step counter for controlling the movement sequence
 
-signed long pos_Y = 0;
-signed long pos_X = 0;
-signed long pos_Z = 0;
+// Volatile variables for position tracking with interrupts
+volatile signed long posi_Y = 0; // Position variable for Y-axis, modified by interrupts
+volatile signed long posi_X = 0; // Position variable for X-axis, modified by interrupts
+volatile signed long posi_Z = 0; // Position variable for Z-axis, modified by interrupts
 
+// Non-volatile position variables
+signed long pos_Y = 0; // Current Y-axis position
+signed long pos_X = 0; // Current X-axis position
+signed long pos_Z = 0; // Current Z-axis position
 
-const int Tiempo = 10;
+const int Tiempo = 10; // Time delay for loop or control actions (in milliseconds)
 
+// PID control variables
+long prevT = 0;       // Previous time for calculating time difference in PID
+float eprev = 0;      // Previous error for calculating PID derivative
+float eintegral = 0;  // Integral of the error for PID control
+unsigned long Timer = 0; // Timer for control actions
+signed long e = 0;    // Error term for PID control
+int pwr = 0;          // Power output for the motors
 
-long prevT = 0;
-float eprev = 0;
-float eintegral = 0;
-unsigned long Timer = 0;
-signed long e = 0;
-int pwr = 0;
+// Desired positions for each axis
+float PosicionDeseadaX = 0.0; // Desired X position
+float PosicionDeseadaY = 0.0; // Desired Y position
+float PosicionDeseadaZ = 0.0; // Desired Z position
+float PosicionDeseadaO = 0.0; // Desired orientation (rotation angle)
 
-float PosicionDeseadaX = 0.0;
-float PosicionDeseadaY = 0.0;
-float PosicionDeseadaZ = 0.0;
-float PosicionDeseadaO = 0.0;
-
+// Enumeration for robot states
 enum PosiblesEstados {ESTADOCERO, PARAR, REINICIAR, CALIBRAR, INICIAR};
-PosiblesEstados estado = ESTADOCERO;
+PosiblesEstados estado = ESTADOCERO; // Initial robot state
 
-int Etapa = 0;
-int Pieza = 0;
+int Etapa = 0; // Current step in the sequence
+int Pieza = 0; // Current piece number in the process
+
 void setup() {
 
   Serial.begin(9600);
