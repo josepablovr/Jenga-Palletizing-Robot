@@ -15,10 +15,10 @@ int posZ = -38; // Z position of the end effector (negative for downward)
 int Orientation = 0; // Orientation angle of the end effector
 
 // Button definitions for controlling the robot
-#define STOP 44          // Stop button
-#define START 45         // Start button
-#define CALIBRATION 47   // Calibration button
-#define RESET 46         // Restart button
+#define STOP 44        
+#define START 45        
+#define CALIBRATION 47  
+#define RESET 46       
 
 // Motor and encoder pins for the Y-axis
 #define ENCA_Y 21        // Encoder A for Y-axis
@@ -229,7 +229,7 @@ void loop() {
         if (trajectory == true) {
           part = 2;
           stage = 0;
-          SetPartPosition(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, part);
         }
         break;
       }
@@ -239,7 +239,7 @@ void loop() {
         if (trajectory == true) {
           part = 3;
           stage = 0;
-          SetPartPosition(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, part);
         }
         break;
       }
@@ -249,7 +249,7 @@ void loop() {
         if (trajectory == true) {
           part = 4;
           stage = 0;
-          SetPartPosition(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, part);
         }
         break;
       }
@@ -259,7 +259,7 @@ void loop() {
         if (trajectory == true) {
           part = 5;
           stage = 0;
-          SetPartPosition(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, part);
         }
         break;
       }
@@ -269,7 +269,7 @@ void loop() {
         if (trajectory == true) {
           part = 6;
           stage = 0;
-          SetPartPosition(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, part);
         }
         break;
       }
@@ -280,7 +280,7 @@ void loop() {
           part = 0;
           stage = 0;
           state = STOP;  // Stop the robot once all parts are processed
-          SetPartPosition(posX, posY, posZ, orientation, part);
+          PositionPiece(posX, posY, posZ, orientation, part);
         }
         break;
       }
@@ -636,347 +636,270 @@ bool PIDZ(signed long desiredDistance) {
   return movementFinished;  // Return whether the movement finished
 }
 
-
-
-void AbrirGarra() {
-  analogWrite(PWM_G, pwm_abrir);
-  digitalWrite(IN1_G, HIGH);
+// Function to open the gripper
+void OpenGripper() {
+  analogWrite(PWM_G, pwm_abrir);  // Open gripper
+  digitalWrite(IN1_G, HIGH);      // Set motor direction
   digitalWrite(IN2_G, LOW);
 }
 
-void CerrarGarra(int intensidad) {
-  analogWrite(PWM_G, intensidad);
-  digitalWrite(IN1_G, LOW);
+// Function to close the gripper with a specific intensity
+void CloseGripper(int intensity) {
+  analogWrite(PWM_G, intensity);  // Control gripper force
+  digitalWrite(IN1_G, LOW);        // Set motor direction
   digitalWrite(IN2_G, HIGH);
 }
-void ApagarGarra() {
-  analogWrite(PWM_G, 0);
-  digitalWrite(IN1_G, LOW);
+
+// Function to turn off the gripper
+void TurnOffGripper() {
+  analogWrite(PWM_G, 0);           // Stop gripper
+  digitalWrite(IN1_G, LOW);        // Stop motor
   digitalWrite(IN2_G, LOW);
 }
 
+// Function to move the robot to a specific position in XYZ coordinates
+bool MoveToCoordinateXYZ(int x, int y, int z) {
+  bool movement_finished = false;
+  switch (step) {
+    case 0:  // Move in X direction
+      moveX = PIDX(x);
+      if (moveX) step = 1;
+      break;
+    case 1:  // Move in Y direction
+      moveY = PIDY(y);
+      if (moveY) step = 2;
+      break;
+    case 2:  // Move in Z direction
+      moveZ = PIDZ(z);
+      if (moveZ) step = 3;
+      break;
+    case 3:  // End movement
+      movement_finished = true;
+      moveX = moveY = moveZ = false;
+      step = 0;
+      break;
+  }
+  return movement_finished;
+}
 
+// Function to move the robot to a specific position in ZYX order
+bool MoveToCoordinateZYX(int z, int y, int x) {
+  bool movement_finished = false;
+  switch (step) {
+    case 0:  // Move in Z direction
+      moveZ = PIDZ(z);
+      if (moveZ) step = 1;
+      break;
+    case 1:  // Move in Y direction
+      moveY = PIDY(y);
+      if (moveY) step = 2;
+      break;
+    case 2:  // Move in X direction
+      moveX = PIDX(x);
+      if (moveX) step = 3;
+      break;
+    case 3:  // End movement
+      movement_finished = true;
+      moveX = moveY = moveZ = false;
+      step = 0;
+      break;
+  }
+  return movement_finished;
+}
 
-bool AvanzarCoordenadaXYZ (int x, int y, int z) {
-  bool avance_terminado = false;
-  switch (paso) {
+// Function to grab an object
+bool GrabObject(int z) {
+  bool movement_finished = false;
+  switch (step) {
     case 0: {
-        avanceX = PIDX(x);
-        
-        if (avanceX == true) {
-          paso = 1;
-        }
-        break;
-      }
+      servo.write(0);  // Move gripper to initial position
+      delay(1000);
+      step = 1;
+      break;
+    }
     case 1: {
-        avanceY = PIDY(y);
-        if (avanceY == true) {
-          paso = 2;
-        }
-        break;
-      }
+      moveZ = PIDZ(z);
+      if (moveZ) step = 2;
+      break;
+    }
     case 2: {
-        avanceZ = PIDZ(z);
-        if (avanceZ == true) {
-          paso = 3;
-        }
-        break;
-      }
-
+      delay(500);  // Wait before closing gripper
+      moveZ = false;
+      CloseGripper(pwm_cerrar);  // Close gripper
+      delay(1500);
+      step = 3;
+      break;
+    }
     case 3: {
-        avance_terminado = true;
-        avanceX = false;
-        avanceY = false;
-        avanceZ = false;
-        paso = 0;
-        break;
+      moveZ = PIDZ(0);
+      if (moveZ) {
+        movement_finished = true;
+        step = 0;
       }
-
+      break;
+    }
   }
-  return avance_terminado;
+  return movement_finished;
 }
 
-bool AvanzarCoordenadaZYX (int z, int y, int x) {
-  bool avance_terminado = false;
-  switch (paso) {
+// Function to release an object
+bool ReleaseObject(int z) {
+  bool movement_finished = false;
+  switch (step) {
     case 0: {
-        avanceZ = PIDZ(z);
-        if (avanceZ == true) {
-          paso = 1;
-        }
-        break;
-      }
+      moveZ = PIDZ(z);
+      if (moveZ) step = 1;
+      break;
+    }
     case 1: {
-        avanceY = PIDY(y);
-        if (avanceY == true) {
-          paso = 2;
-        }
-        break;
-      }
+      moveZ = false;
+      delay(1000);  // Wait before opening gripper
+      OpenGripper();  // Open gripper
+      delay(1500);
+      step = 2;
+      break;
+    }
     case 2: {
-        avanceX = PIDX(x);
-        if (avanceX == true) {
-          paso = 3;
-        }
-        break;
+      moveZ = PIDZ(0);
+      if (moveZ) {
+        step = 0;
+        movement_finished = true;
       }
+      break;
+    }
+  }
+  return movement_finished;
+}
 
+// Function to perform the complete sequence of grabbing, moving, and releasing the object
+bool MoveToSequence(int x, int y, int z, int angle, int releaseHeight) {
+  bool movement_finished = false;
+  switch (stage) {
+    case 0: {
+      bool grab = GrabObject(releaseHeight);
+      if (grab) {
+        moveX = moveY = moveZ = false;
+        stage = 1;
+      }
+      break;
+    }
+    case 1: {
+      bool moveToXYZ = MoveToCoordinateXYZ(x, y, 0);
+      CloseGripper(pwm_cerrar * 0.65);  // Close gripper with reduced intensity
+      if (moveToXYZ) {
+        moveToXYZ = false;
+        moveX = moveY = moveZ = false;
+        stage = 2;
+      }
+      break;
+    }
+    case 2: {
+      servo.write(angle);  // Move to the desired angle
+      delay(1000);
+      stage = 3;
+      break;
+    }
     case 3: {
-        avance_terminado = true;
-        avanceX = false;
-        avanceY = false;
-        avanceZ = false;
-        paso = 0;
-        break;
+      bool release = ReleaseObject(z);
+      if (release) {
+        moveX = moveY = moveZ = false;
+        stage = 4;
       }
-
+      break;
+    }
+    case 4: {
+      bool returnToOrigin = MoveToCoordinateXYZ(0, 0, 0);
+      if (returnToOrigin) {
+        moveX = moveY = moveZ = false;
+        stage = 0;
+        movement_finished = true;
+      }
+      break;
+    }
   }
-  return avance_terminado;
-}
-
-bool AgarrarPieza(int z)
-{
-  bool avance_terminado = false;
-  switch (paso) {
-
-    case 0: {
-        servo.write(0);
-        delay(1000);
-        paso = 1;
-        break;
-      }
-    case 1: {
-        avanceZ = PIDZ(z);
-        if (avanceZ == true) {
-          paso = 2;
-        }
-        break;
-      }
-
-    case 2: {
-        delay(500);
-        avanceZ = false;
-        CerrarGarra(pwm_cerrar);
-        delay(1500);
-        paso = 3;
-        break;
-      }
-    case 3: {
-        avanceZ = PIDZ(0);
-        if (avanceZ == true) {
-          avance_terminado = true;
-          paso = 0;
-        }
-        break;
-      }
-
-  }
-  return avance_terminado;
-}
-
-
-bool SoltarPieza(int z)
-{
-  bool avance_terminado = false;
-  switch (paso) {
-    case 0: {
-        avanceZ = PIDZ(z);
-        if (avanceZ == true) {
-          paso = 1;
-        }
-        break;
-      }
-
-    case 1: {
-        avanceZ = false;
-        delay(1000);
-        AbrirGarra();
-        delay(1500);
-        paso = 2;
-
-        break;
-
-        
-      }
-    case 2: {        
-
-
-        avanceZ = PIDZ(0);
-        if (avanceZ == true) {
-
-          paso = 0;
-          avance_terminado = true;
-        }
-        break;
-      }
-
-
-
-  }
-  return avance_terminado;
-}
-
-
-bool Secuencia(int x, int y, int z, int ang, int za) {
-  bool avance_terminado = false;
-  switch (Etapa) {
-    case 0: {
-        bool avanzarcoordenada = AgarrarPieza(za);
-        
-        
-        if (avanzarcoordenada == true) {
-          
-          avanceX =  false;
-          avanceY = false;
-          avanceZ = false;
-          Etapa = 1;
-          avanzarcoordenada = false;
-        }
-        break;
-      }
-
-    case 1: {
-      
-        bool avanzarcoordenada = AvanzarCoordenadaXYZ(x, y, 0);
-        CerrarGarra(pwm_cerrar*0.65);
-        if (avanzarcoordenada == true) {
-          avanzarcoordenada = false;
-          avanceX =  false;
-          avanceY = false;
-          avanceZ = false;
-          Etapa = 2;
-        }
-        break;
-      }
-    case 2: {
-        servo.write(ang);
-        delay(1000);
-        Etapa = 3;
-        break;
-      }
-    case 3:
-      {
-        bool avanzarcoordenada = SoltarPieza(z);
-        if (avanzarcoordenada == true) {
-          avanzarcoordenada = false;
-          avanceX =  false;
-          avanceY = false;
-          avanceZ = false;
-          Etapa = 4;
-        }
-        break;
-      }
-
-    case 4:
-      {
-        bool avanzarcoordenada = AvanzarCoordenadaXYZ(0, 0, 0);
-        if (avanzarcoordenada == true) {
-
-          avanceX =  false;
-          avanceY = false;
-          avanceZ = false;
-          Etapa = 0;
-          avance_terminado = true;
-        }
-        break;
-      }
-  }
-  return avance_terminado;
-
+  return movement_finished;
 }
 
 
 
-void PosicionPieza(int X, int Y, int Z, int Ang, int n){
-  float deltaX = DistanciaEntrePiezas*cos(Ang*PI/180);
-  float deltaY = DistanciaEntrePiezas*sin(Ang*PI/180);
-  float deltaZ = AlturadePieza;
+// Function to position the piece at a specific location
+void PositionPiece(int X, int Y, int Z, int Ang, int n) {
+  float deltaX = DistanceBetweenPieces * cos(Ang * PI / 180);
+  float deltaY = DistanceBetweenPieces * sin(Ang * PI / 180);
+  float deltaZ = PieceHeight;
 
-  float Orientacion = 0;
+  float Orientation = 0;
   float posX = 0;
   float posY = 0;
   float posZ = 0;
+  
   switch(n) {
     case 1:
-    {
       posX = X - deltaX;
       posY = Y + deltaY;
       posZ = Z;
-      Orientacion = Ang;
+      Orientation = Ang;
       break;
-    }
     case 2:
-    {
       posX = X;
       posY = Y;
       posZ = Z;
-      Orientacion = Ang;
+      Orientation = Ang;
       break;
-    }
     case 3:
-    {
       posX = X + deltaX;
       posY = Y - deltaY;
       posZ = Z;
-      Orientacion = Ang;
+      Orientation = Ang;
       break;
-    }
     case 4:
-    {
       posX = X + deltaY;
       posY = Y + deltaX;
       posZ = Z + deltaZ;
-      Orientacion = Ang+95;
+      Orientation = Ang + 95;
       break;
-    }
-
     case 5:
-    {
       posX = X;
       posY = Y;
       posZ = Z + deltaZ;
-      Orientacion = Ang+95;
+      Orientation = Ang + 95;
       break;
-    }
     case 6:
-    {
       posX = X - deltaY;
       posY = Y - deltaX;
       posZ = Z + deltaZ;
-      Orientacion = Ang+95;
+      Orientation = Ang + 95;
       break;
-    }
-        
   }
   
-  PosicionDeseadaX = -posX;
-  PosicionDeseadaY = posY;
-  PosicionDeseadaZ = posZ;
-  PosicionDeseadaO = Orientacion;
-  
+  DesiredPositionX = -posX;
+  DesiredPositionY = posY;
+  DesiredPositionZ = posZ;
+  DesiredPositionOrientation = Orientation;
 }
 
-float* GeneracionTrayectoriaL(int posX, int posY, int Orientacion, int Tiempo, int instante) {
-  float aX = posX/Tiempo;
-  float aY = posX/Tiempo;
-  float aO = Orientacion/Tiempo;
+// Function to generate a trajectory (linear interpolation)
+float* GenerateLinearTrajectory(int posX, int posY, int Orientation, int Time, int moment) {
+  float aX = posX / Time;
+  float aY = posX / Time;
+  float aO = Orientation / Time;
 
-
-  float targetX = aX*instante;
-  float targetY = aY*instante;
-  float targetO = aO*instante;
-  float parametros[3] = {targetX, targetY, targetO};
-  return parametros;
+  float targetX = aX * moment;
+  float targetY = aY * moment;
+  float targetO = aO * moment;
+  float parameters[3] = {targetX, targetY, targetO};
+  return parameters;
 }
 
-float* GeneracionTrayectoriaP(int posX, int posY, int Orientacion, int Tiempo) {
+// Function to generate a trajectory (cubic interpolation)
+float* GenerateCubicTrajectory(int posX, int posY, int Orientation, int Time) {
   float a0X = pos_X;
-  float a2X = 3/Tiempo^2*(posX - pos_X);
-  float a3X = 3/Tiempo^3*(posX - pos_X);
+  float a2X = 3 / pow(Time, 2) * (posX - pos_X);
+  float a3X = 3 / pow(Time, 3) * (posX - pos_X);
   
-  float aY = posX/Tiempo;
-  float aO = Orientacion/Tiempo;
+  float aY = posX / Time;
+  float aO = Orientation / Time;
 
-  float parametros[3] = {a0X, a2X, a3X};
-  return parametros;
+  float parameters[3] = {a0X, a2X, a3X};
+  return parameters;
 }
