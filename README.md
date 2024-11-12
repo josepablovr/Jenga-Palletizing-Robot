@@ -2,6 +2,10 @@
 
 Welcome to the **Palletizing Robot** project! This is a **4 DOF robot** that combines precision, automation, and repurposed hardware from an old printer (yes, really!). It uses **3 prismatic actuators** and a **rotational joint** in the end effector to perform efficient pick-and-place operations.
 
+![Intro](https://github.com/user-attachments/assets/c5f45216-ce70-4676-b3a3-63981c893a4b)
+
+
+
 ## What’s Inside?
 
 ### The Mechanics
