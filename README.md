@@ -46,7 +46,11 @@ Let the robot do the work—precisely and without interruption.
 
 Enjoy!
 
+## Final Demo
 
+Now, see the Jenga Palletizing robot in action!
+
+https://github.com/user-attachments/assets/d43d5cb7-fa35-47aa-a776-7560850deeca
 
 Credits:
 
